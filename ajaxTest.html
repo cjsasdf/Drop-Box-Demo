@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>ajax test</title>
+		<style>
+			.textarea{
+				resize: none;
+				width: 889px;
+				min-height: 360px;
+				border:1px solid #999;
+				background-color:#ECECEC;
+			}
+		</style>
+		<script>
+			var jsl=typeof jsl==="undefined"?{}:jsl;jsl.format=(function(){function b(c,d){return new Array(d+1).join(c)}function a(g){var f=0,e=0,h="    ",d="",j=0,k=false,c=null;for(f=0,e=g.length;f<e;f+=1){c=g.charAt(f);switch(c){case"{":case"[":if(!k){d+=c+"\n"+b(h,j+1);j+=1}else{d+=c}break;case"}":case"]":if(!k){j-=1;d+="\n"+b(h,j)+c}else{d+=c}break;case",":if(!k){d+=",\n"+b(h,j)}else{d+=c}break;case":":if(!k){d+=": "}else{d+=c}break;case" ":case"\n":case"\t":if(k){d+=c}break;case'"':if(f>0&&g.charAt(f-1)!=="\\"){k=!k}d+=c;break;default:d+=c;break}}return d}return{formatJson:a}}());
+			var Ajax = function(_url, _callback, _param, _type){
+				this._url = _url;
+				this._callback = _callback;
+				this._param = _param;
+				this._type = _type;
+				this._request = new XMLHttpRequest;
+			}
+			Ajax.prototype.stateChanged = function(){
+				if ( this._request.readyState == 4 && this._request.status == 200 ){
+					var response = this._type ? this._request.responseXML : this._request.responseText;
+					if ( navigator.appName.indexOf("EIS") == -1 ){
+						response = response.replace(/(\s\s)|(\r\n)|(\r)|(\n)/gi, "");
+					}
+					if ( this._callback != null && typeof(this._callback) == "function" ){
+						this._callback(response, this._param);
+					}
+					response = null;
+					this._url = null;
+					this._callback = null;
+					this._param = null;
+					this._type = null;
+					this._request = null;
+				}
+			}
+			Ajax.prototype.get = function(){
+				var _self = this;
+				this._request.onreadystatechange = function(){
+					_self.stateChanged();
+				}
+				this._request.open("GET", this._url, true);
+				this._request.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+				this._request.send(null);
+			}
+
+			function submit(){
+				var urlv = document.getElementById("url").value;
+				var ajaxobj = new Ajax(urlv,function(resp){
+					console.log(jsl.format.formatJson(resp));
+					document.getElementById("ajaxresult").innerHTML = jsl.format.formatJson(resp);
+				});
+				ajaxobj.get();
+			}
+			function validate(){
+				var obj = document.getElementById("ajaxresult");
+				obj.value = jsl.format.formatJson(obj.value);
+			}
+		</script>
+	</head>
+	<body>
+		<div>
+			<label>Test URL:</label>
+			<input type="text" id="url" size="46" class="">
+			<input type="button" value="submit" onclick="submit()">
+		</div>
+		<div>
+			<h3>ajax response:</h3>
+			<textarea id="ajaxresult" class="textarea"></textarea>
+		</div>
+		<input type="button" value="validate" onclick="validate()">
+	</body>
+</html>
